@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fraunces, Spline_Sans } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 
 const fraunces = Fraunces({
@@ -25,6 +26,31 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${splineSans.variable}`}>
+      <head>
+        <Script id="fetch-patch" strategy="beforeInteractive">{`
+          (function(){
+            var orig = window.fetch;
+            window.fetch = function(input, init) {
+              if (init && init.headers) {
+                var h = init.headers, clean = {}, pairs, i;
+                if (typeof h.entries === 'function') {
+                  pairs = [];
+                  h.forEach(function(v,k){ pairs.push([k,v]); });
+                } else if (Array.isArray(h)) {
+                  pairs = h;
+                } else {
+                  pairs = Object.keys(h).map(function(k){ return [k, h[k]]; });
+                }
+                for (i = 0; i < pairs.length; i++) {
+                  clean[pairs[i][0]] = String(pairs[i][1]).replace(/[^\\x00-\\xFF]/g, '');
+                }
+                init = Object.assign({}, init, { headers: clean });
+              }
+              return orig.apply(this, [input, init]);
+            };
+          })();
+        `}</Script>
+      </head>
       <body className="min-h-screen antialiased">{children}</body>
     </html>
   )
