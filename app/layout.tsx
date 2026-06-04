@@ -29,6 +29,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script id="fetch-patch" strategy="beforeInteractive">{`
           (function(){
+            function strip(v){ return String(v).replace(/[^\\x00-\\xFF]/g,''); }
+
+            var _set = Headers.prototype.set;
+            var _app = Headers.prototype.append;
+            Headers.prototype.set = function(n,v){ return _set.call(this,n,strip(v)); };
+            Headers.prototype.append = function(n,v){ return _app.call(this,n,strip(v)); };
+
             var orig = window.fetch;
             window.fetch = function(input, init) {
               if (init && init.headers) {
@@ -42,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   pairs = Object.keys(h).map(function(k){ return [k, h[k]]; });
                 }
                 for (i = 0; i < pairs.length; i++) {
-                  clean[pairs[i][0]] = String(pairs[i][1]).replace(/[^\\x00-\\xFF]/g, '');
+                  clean[pairs[i][0]] = String(pairs[i][1]).replace(/[^\\x00-\\xFF]/g,'');
                 }
                 init = Object.assign({}, init, { headers: clean });
               }
