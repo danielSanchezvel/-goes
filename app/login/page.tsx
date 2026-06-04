@@ -19,14 +19,15 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createClient()
-    const { error: err } = await supabase.auth.signInWithPassword({
+    const { data, error: err } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: password.trim(),
     })
 
+    console.log('[login] result:', { data, err })
     setLoading(false)
     if (err) {
-      setError('Invalid email or password.')
+      setError(err.message)
       return
     }
     window.location.href = '/'
